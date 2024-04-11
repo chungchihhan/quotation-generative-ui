@@ -36,25 +36,25 @@ export function ChatPanel({
 
   const exampleMessages = [
     {
-      heading: 'What are the',
-      subheading: 'trending memecoins today?',
-      message: `What are the trending memecoins today?`
+      heading: 'I would like to know',
+      subheading: 'how much LLM service will cost?',
+      message: `How much will LLM service cost?`
     },
     {
-      heading: 'What is the price of',
-      subheading: '$DOGE right now?',
-      message: 'What is the price of $DOGE right now?'
-    },
-    {
-      heading: 'I would like to buy',
-      subheading: '42 $DOGE',
-      message: `I would like to buy 42 $DOGE`
-    },
-    {
-      heading: 'What are some',
-      subheading: `recent events about $DOGE?`,
-      message: `What are some recent events about $DOGE?`
+      heading: 'Could you show me a price table for',
+      subheading: 'LLM service right now?',
+      message: 'Show me the price table for LLM service'
     }
+    // {
+    //   heading: 'I would like to buy',
+    //   subheading: '42 $DOGE',
+    //   message: `I would like to buy 42 $DOGE`
+    // },
+    // {
+    //   heading: 'What are some',
+    //   subheading: `recent events about $DOGE?`,
+    //   message: `What are some recent events about $DOGE?`
+    // }
   ]
 
   return (
