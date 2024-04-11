@@ -34,7 +34,7 @@ import { Chat } from '@/lib/types'
 import { auth } from '@/auth'
 import { PriceTableSkeleton } from '@/components/stocks/price-table-skeleton'
 import { PriceTable } from '@/components/stocks/price-table'
-import { json } from 'body-parser'
+// import { json } from 'body-parser'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || ''
@@ -68,11 +68,12 @@ async function submitUserMessage(content: string) {
       {
         role: 'system',
         content: `\
-You are a quotation system conversation bot and you can help users write quotations, step by step.
-You and the user can discuss prices and the user can adjust the amount of stocks, in the UI.
+You are a quotation system conversation bot and you can help users write quotations and the details of the service, step by step.
+You and the user can discuss prices and the details of the service and the user can adjust the amount of service.
+The details of the service should be like a description from the service name, not a bullet point list.
 
 Messages inside [] means that it's a UI element or a user event. For example:
-- "[Price of LLM service = 100]" means that an interface of the stock price of LLM service is shown to the user.
+- "[Price of LLM service = 100]" means that an interface of the price of LLM service is shown to the user.
 - "[User has changed the amount of LLM service to 10]" means that the user has changed the amount of LLM service to 10 in the UI.
 
 If you want to show a table of prices, call \`showPriceTable\`.
@@ -114,11 +115,17 @@ Besides that, you can also chat with users and do some calculations if needed.`
       showPriceTable: {
         description: 'Show the price table.',
         parameters: z.object({
-          symbol: z.string().describe('The name of the service'),
+          service_name: z.string().describe('The name of the service'),
+          service_details: z.string().describe('The details of the service'),
           price: z.number().describe('The price of the service.'),
-          delta: z.number().describe('The change in price of the service')
+          quantity: z.number().describe('The quantity of the service.')
         }),
-        render: async function* ({ symbol, price, delta }) {
+        render: async function* ({
+          service_name,
+          service_details,
+          price,
+          quantity
+        }) {
           yield (
             <BotCard>
               <PriceTableSkeleton />
@@ -135,14 +142,21 @@ Besides that, you can also chat with users and do some calculations if needed.`
                 id: nanoid(),
                 role: 'function',
                 name: 'showStockPrice',
-                content: JSON.stringify({ symbol, price, delta })
+                content: JSON.stringify({
+                  service_name,
+                  service_details,
+                  price,
+                  quantity
+                })
               }
             ]
           })
 
           return (
             <BotCard>
-              <PriceTable props={{ symbol, price, delta }} />
+              <PriceTable
+                props={{ service_name, service_details, price, quantity }}
+              />
             </BotCard>
           )
         }

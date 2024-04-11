@@ -1,22 +1,26 @@
 'use client'
 
-// import { useState, useRef, useEffect, useId } from 'react'
-// import { scaleLinear } from 'd3-scale'
-// import { subMonths, format } from 'date-fns'
-// import { useResizeObserver } from 'usehooks-ts'
-// import { useAIState } from 'ai/rsc'
+import React from 'react'
 
 interface Stock {
-  symbol: string
+  service_name: string
+  service_details: string
   price: number
-  delta: number
+  quantity: number
 }
 
 export function PriceTable({
-  props: { symbol, price, delta }
+  props: { service_name, service_details, price, quantity }
 }: {
   props: Stock
 }) {
+  const subtotal = price * quantity
+  const taxRate = 0.05
+  const feeRate = 0.1
+  const fee = Math.round(subtotal * feeRate * 100) / 100
+  const tax = Math.round(subtotal * taxRate * 100) / 100
+  const total = Number((subtotal + fee + tax).toFixed(2))
+  const formatted_service_details = service_details.replace(/ - /g, '\n')
   return (
     <div className="w-full">
       <div className="overflow-x-auto">
@@ -34,7 +38,8 @@ export function PriceTable({
           <div className="bg-white">
             <div className="grid grid-cols-6 px-6 py-4">
               <p>1</p>
-              <p>{symbol}</p>
+              <p>{service_name}</p>
+              {/* <p>{service_details}</p> */}
               <p>
                 1.儲值服務文件處理
                 <br />
@@ -44,9 +49,9 @@ export function PriceTable({
                 <br />
                 4.測用服務後端管理
               </p>
-              <p>1</p>
-              <p />
-              <p />
+              <p>{price}</p>
+              <p>{quantity}</p>
+              <p>{subtotal}</p>
             </div>
             <div className="grid grid-cols-6 px-6 py-4">
               <p>2</p>
@@ -60,9 +65,9 @@ export function PriceTable({
                 <br />
                 4.應用 APP 建立 MR 資閱器(Android)
               </p>
-              <p>1</p>
+              <p>服務費(10%)</p>
               <p />
-              <p />
+              <p>{fee}</p>
             </div>
             <div className="grid grid-cols-6 px-6 py-4">
               <p>3</p>
@@ -79,7 +84,7 @@ export function PriceTable({
               </p>
               <p>營業稅(5%)</p>
               <p />
-              <p>{price}</p>
+              <p>{tax}</p>
             </div>
             <div className="grid grid-cols-6 px-6 py-4">
               <p />
@@ -87,7 +92,7 @@ export function PriceTable({
               <p />
               <p>總額</p>
               <p />
-              <p>2,000,000</p>
+              <p>{total}</p>
             </div>
           </div>
         </div>
