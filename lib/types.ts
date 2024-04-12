@@ -35,3 +35,10 @@ export interface User extends Record<string, any> {
   password: string
   salt: string
 }
+
+export interface Service {
+  service_name: string
+  service_details: string
+  price: number
+  quantity: number
+}

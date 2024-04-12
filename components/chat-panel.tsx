@@ -36,16 +36,18 @@ export function ChatPanel({
 
   const exampleMessages = [
     {
-      heading: 'Could you show me a price table for',
-      subheading: 'LLM service right now?',
-      message: 'Show me the price table for LLM service'
+      heading: 'Could you show me a full price table for',
+      subheading: 'RAG service and its related services?',
+      message:
+        'Show me the full price table for RAG service and its related services'
     },
     {
       heading: 'Could you show me a full price table for',
-      subheading: 'LLM service and its relative services?',
+      subheading: 'VR service and its related services?',
       message:
-        'Show me the full price table for LLM service and its relative services'
+        'Show me the full price table for VR service and its related services'
     }
+
     // {
     //   heading: 'I would like to buy',
     //   subheading: '42 $DOGE',

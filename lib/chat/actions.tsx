@@ -77,7 +77,6 @@ Messages inside [] means that it's a UI element or a user event. For example:
 - "[Price of LLM service = 100]" means that an interface of the price of LLM service is shown to the user.
 - "[User has changed the amount of LLM service to 10]" means that the user has changed the amount of LLM service to 10 in the UI.
 
-If you want to show a table of prices, call \`showPriceTable\`.
 If you want to show a full table of prices, call \`showFullPriceTable\`.
 
 Besides that, you can also chat with users and do some calculations if needed.`
@@ -114,58 +113,9 @@ Besides that, you can also chat with users and do some calculations if needed.`
       return textNode
     },
     functions: {
-      showPriceTable: {
-        description: 'Show the price table.',
-        parameters: z.object({
-          service_name: z.string().describe('The name of the service'),
-          service_details: z.string().describe('The details of the service'),
-          price: z.number().describe('The price of the service.'),
-          quantity: z.number().describe('The quantity of the service.')
-        }),
-        render: async function* ({
-          service_name,
-          service_details,
-          price,
-          quantity
-        }) {
-          yield (
-            <BotCard>
-              <PriceTableSkeleton />
-            </BotCard>
-          )
-
-          await sleep(2000)
-
-          aiState.done({
-            ...aiState.get(),
-            messages: [
-              ...aiState.get().messages,
-              {
-                id: nanoid(),
-                role: 'function',
-                name: 'showStockPrice',
-                content: JSON.stringify({
-                  service_name,
-                  service_details,
-                  price,
-                  quantity
-                })
-              }
-            ]
-          })
-
-          return (
-            <BotCard>
-              <PriceTable
-                props={{ service_name, service_details, price, quantity }}
-              />
-            </BotCard>
-          )
-        }
-      },
       showFullPriceTable: {
         description:
-          'List some related services and costs.Describe the service and the price.',
+          'List some related services and costs. Describe the service and the price.',
         parameters: z.object({
           services: z.array(
             z.object({
