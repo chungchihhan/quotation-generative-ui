@@ -36,14 +36,15 @@ export function ChatPanel({
 
   const exampleMessages = [
     {
-      heading: 'I would like to know',
-      subheading: 'how much LLM service will cost?',
-      message: `How much will LLM service cost?`
-    },
-    {
       heading: 'Could you show me a price table for',
       subheading: 'LLM service right now?',
       message: 'Show me the price table for LLM service'
+    },
+    {
+      heading: 'Could you show me a full price table for',
+      subheading: 'LLM service and its relative services?',
+      message:
+        'Show me the full price table for LLM service and its relative services'
     }
     // {
     //   heading: 'I would like to buy',

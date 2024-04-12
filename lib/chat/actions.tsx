@@ -20,7 +20,6 @@ import {
 } from '@/components/stocks'
 
 import { z } from 'zod'
-import { Stocks } from '@/components/stocks/stocks'
 
 import {
   formatNumber,
@@ -32,9 +31,11 @@ import { saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat } from '@/lib/types'
 import { auth } from '@/auth'
-import { PriceTableSkeleton } from '@/components/stocks/price-table-skeleton'
-import { PriceTable } from '@/components/stocks/price-table'
+import { PriceTableSkeleton } from '@/components/quotation/price-table-skeleton'
+import { PriceTable } from '@/components/quotation/price-table'
 // import { json } from 'body-parser'
+import { Services } from '@/components/quotation/services'
+import { ServicesSkeleton } from '@/components/quotation/services-skeleton'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || ''
@@ -77,6 +78,7 @@ Messages inside [] means that it's a UI element or a user event. For example:
 - "[User has changed the amount of LLM service to 10]" means that the user has changed the amount of LLM service to 10 in the UI.
 
 If you want to show a table of prices, call \`showPriceTable\`.
+If you want to show a full table of prices, call \`showFullPriceTable\`.
 
 Besides that, you can also chat with users and do some calculations if needed.`
       },
@@ -157,6 +159,52 @@ Besides that, you can also chat with users and do some calculations if needed.`
               <PriceTable
                 props={{ service_name, service_details, price, quantity }}
               />
+            </BotCard>
+          )
+        }
+      },
+      showFullPriceTable: {
+        description:
+          'List some related services and costs.Describe the service and the price.',
+        parameters: z.object({
+          services: z.array(
+            z.object({
+              service_name: z.string().describe('The name of the service'),
+              service_details: z
+                .string()
+                .describe('The details of the service'),
+              price: z.number().describe('The price of the service.'),
+              quantity: z.number().describe('The quantity of the service.')
+            })
+          )
+        }),
+        render: async function* ({ services }) {
+          yield (
+            <BotCard>
+              <ServicesSkeleton />
+            </BotCard>
+          )
+
+          await sleep(2000)
+
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'function',
+                name: 'showFullStockPrice',
+                content: JSON.stringify({
+                  services
+                })
+              }
+            ]
+          })
+
+          return (
+            <BotCard>
+              <Services props={services} />
             </BotCard>
           )
         }
