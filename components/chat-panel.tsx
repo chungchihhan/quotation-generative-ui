@@ -39,13 +39,12 @@ export function ChatPanel({
       heading: 'Could you show me a full price table for',
       subheading: 'RAG service and its related services?',
       message:
-        'Show me the full price table for RAG service and its related services'
+        'Show me the full price table for RAG service and its related services.'
     },
     {
-      heading: 'Could you show me a full price table for',
-      subheading: 'VR service and its related services?',
-      message:
-        'Show me the full price table for VR service and its related services'
+      heading: 'I would like to buy',
+      subheading: 'three VR services',
+      message: 'I would like to buy three VR services.'
     }
 
     // {

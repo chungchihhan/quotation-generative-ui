@@ -16,8 +16,9 @@ import {
   BotMessage,
   SystemMessage
   // Stock,
-  // Purchase
 } from '@/components/stocks'
+
+import { Purchase } from '@/components/quotation/service-purchase'
 
 import { z } from 'zod'
 
@@ -78,6 +79,7 @@ Messages inside [] means that it's a UI element or a user event. For example:
 - "[User has changed the amount of LLM service to 10]" means that the user has changed the amount of LLM service to 10 in the UI.
 
 If you want to show a full table of prices, call \`showFullPriceTable\`.
+If the user want to buy a service, call \`showServicePurchase\`.
 
 Besides that, you can also chat with users and do some calculations if needed.`
       },
@@ -155,6 +157,66 @@ Besides that, you can also chat with users and do some calculations if needed.`
           return (
             <BotCard>
               <Services props={services} />
+            </BotCard>
+          )
+        }
+      },
+      showServicePurchase: {
+        description:
+          'Show price and the UI to purchase a service. Use this if the user wants to purchase a service.',
+        parameters: z.object({
+          symbol: z.string().describe('The name or symbol of the service.'),
+          price: z.number().describe('The price of the service.'),
+          numberOfServices: z
+            .number()
+            .describe(
+              'The **quantity** for a service to purchase. Can be optional if the user did not specify it.'
+            )
+        }),
+        render: async function* ({ symbol, price, numberOfServices = 10 }) {
+          if (numberOfServices <= 0 || numberOfServices > 100) {
+            aiState.done({
+              ...aiState.get(),
+              messages: [
+                ...aiState.get().messages,
+                {
+                  id: nanoid(),
+                  role: 'system',
+                  content: `[User has selected an invalid amount]`
+                }
+              ]
+            })
+
+            return <BotMessage content={'Invalid amount'} />
+          }
+
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'function',
+                name: 'showServicePurchase',
+                content: JSON.stringify({
+                  symbol,
+                  price,
+                  numberOfServices
+                })
+              }
+            ]
+          })
+
+          return (
+            <BotCard>
+              <Purchase
+                props={{
+                  numberOfServices,
+                  symbol,
+                  price: +price,
+                  status: 'requires_action'
+                }}
+              />
             </BotCard>
           )
         }
