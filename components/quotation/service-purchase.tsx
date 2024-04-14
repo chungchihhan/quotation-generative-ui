@@ -25,7 +25,7 @@ export function Purchase({
   const [purchasingUI, setPurchasingUI] = useState<null | React.ReactNode>(null)
   const [aiState, setAIState] = useAIState<typeof AI>()
   const [, setMessages] = useUIState<typeof AI>()
-  const { confirmPurchase } = useActions()
+  const { submitUserMessage } = useActions()
 
   // Unique identifier for this UI component.
   const id = useId()
@@ -60,10 +60,6 @@ export function Purchase({
 
     // If it doesn't exist, append it to history.
     setAIState({ ...aiState, messages: [...aiState.messages, message] })
-  }
-
-  function submitUserMessage(message: any) {
-    throw new Error('Function not implemented.')
   }
 
   return (
@@ -126,39 +122,20 @@ export function Purchase({
 
           <button
             className="mt-6 w-full rounded-lg bg-zinc-300 px-4 py-2 font-bold text-zinc-900 hover:bg-zinc-400"
-            // onClick={() =>
-            //   alert(
-            //     `You have bought ${value} services, and it cost you $${(value * price).toFixed(2)}!`
-            //   )
-            // }
             onClick={async () => {
-              const response = await confirmPurchase(service_name, price, value)
-              setPurchasingUI(response.purchasingUI)
-
-              // Insert a new system message to the UI.
-              setMessages((currentMessages: any) => [
-                ...currentMessages,
-                response.newMessage
-              ])
-              // setMessages(currentMessages => [
-              //   ...currentMessages,
-              //   {
-              //     id: nanoid(),
-              //     display: <UserMessage>{response.newMessage}</UserMessage>
-              //   }
-              // ])
-
-              // const responseMessage = await submitUserMessage(
-              //   response.newMessage
+              // alert(
+              //   `You have bought ${value} services, and it cost you $${(value * price).toFixed(2)}!`
               // )
-
-              // setMessages((currentMessages: any) => [
-              //   ...currentMessages,
-              //   responseMessage
-              // ])
+              const response = await submitUserMessage(
+                `The user has bought ${value} ${service_name}, and it cost them ${formatNumber(value * price)}, show the full price table`
+              )
+              setMessages((currentMessages: any[]) => [
+                ...currentMessages,
+                response
+              ])
             }}
           >
-            Purchase
+            Show the full price table
           </button>
         </>
       ) : status === 'completed' ? (
