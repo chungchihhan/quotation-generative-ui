@@ -32,8 +32,6 @@ import { saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat } from '@/lib/types'
 import { auth } from '@/auth'
-import { PriceTableSkeleton } from '@/components/quotation/price-table-skeleton'
-import { PriceTable } from '@/components/quotation/price-table'
 // import { json } from 'body-parser'
 import { Services } from '@/components/quotation/services'
 import { ServicesSkeleton } from '@/components/quotation/services-skeleton'
@@ -41,6 +39,91 @@ import { ServicesSkeleton } from '@/components/quotation/services-skeleton'
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || ''
 })
+
+async function confirmPurchase(
+  service_name: string,
+  price: number,
+  amount: number
+) {
+  'use server'
+
+  const aiState = getMutableAIState<typeof AI>()
+
+  const purchasing = createStreamableUI(
+    <div className="inline-flex items-start gap-1 md:items-center">
+      {spinner}
+      <p className="mb-2">
+        Purchasing {amount} ${service_name}...
+      </p>
+    </div>
+  )
+
+  const systemMessage = createStreamableUI(null)
+
+  runAsyncFnWithoutBlocking(async () => {
+    await sleep(1000)
+
+    purchasing.update(
+      <div className="inline-flex items-start gap-1 md:items-center">
+        {spinner}
+        <p className="mb-2">
+          Purchasing {amount} ${service_name}... working on it...
+        </p>
+      </div>
+    )
+
+    await sleep(1000)
+
+    purchasing.done(
+      <div>
+        <p className="mb-2">
+          You have successfully purchased {amount} {service_name} at ${price}.
+          Total cost = {formatNumber(amount * price)}
+        </p>
+      </div>
+    )
+
+    systemMessage.done(
+      <SystemMessage>
+        You have purchased {amount} {service_name} at ${price}. Total cost ={' '}
+        {formatNumber(amount * price)}.
+      </SystemMessage>
+    )
+
+    aiState.done({
+      ...aiState.get(),
+      messages: [
+        ...aiState.get().messages.slice(0, -1),
+        {
+          id: nanoid(),
+          role: 'function',
+          name: 'showStockPurchase',
+          content: JSON.stringify({
+            service_name,
+            price,
+            defaultAmount: amount,
+            status: 'completed'
+          })
+        },
+        {
+          id: nanoid(),
+          role: 'system',
+          content: `[User has purchased ${amount} ${service_name} at ${price}. Total cost = ${
+            amount * price
+          }]`
+        }
+      ]
+    })
+  })
+
+  return {
+    purchasingUI: purchasing.value,
+    newMessage: {
+      id: nanoid(),
+      display: systemMessage.value
+    }
+  }
+}
 
 async function submitUserMessage(content: string) {
   'use server'
@@ -70,18 +153,18 @@ async function submitUserMessage(content: string) {
       {
         role: 'system',
         content: `\
-You are a quotation system conversation bot and you can help users write quotations and the details of the service, step by step.
-You and the user can discuss prices and the details of the service and the user can adjust the amount of service.
-The details of the service should be like a description from the service name, not a bullet point list.
+        You are a quotation system conversation bot and you can help users write quotations and the details of the service, step by step.
+        You and the user can discuss prices and the details of the service and the user can adjust the amount of service.
+        The details of the service should be like a description from the service name, not a bullet point list.
 
-Messages inside [] means that it's a UI element or a user event. For example:
-- "[Price of LLM service = 100]" means that an interface of the price of LLM service is shown to the user.
-- "[User has changed the amount of LLM service to 10]" means that the user has changed the amount of LLM service to 10 in the UI.
+        Messages inside [] means that it's a UI element or a user event. For example:
+        - "[Price of LLM service = 100]" means that an interface of the price of LLM service is shown to the user.
+        - "[User has changed the amount of LLM service to 10]" means that the user has changed the amount of LLM service to 10 in the UI.
 
-If you want to show a full table of prices, call \`showFullPriceTable\`.
-If the user want to buy a service, call \`showServicePurchase\`.
+        If you want to show a full table of prices, call \`showFullPriceTable\`.
+        If the user want to buy a service, call \`showServicePurchase\`.
 
-Besides that, you can also chat with users and do some calculations if needed.`
+        Besides that, you can also chat with users and do some calculations if needed.`
       },
       ...aiState.get().messages.map((message: any) => ({
         role: message.role,
@@ -165,7 +248,7 @@ Besides that, you can also chat with users and do some calculations if needed.`
         description:
           'Show price and the UI to purchase a service. Use this if the user wants to purchase a service.',
         parameters: z.object({
-          symbol: z.string().describe('The name or symbol of the service.'),
+          service_name: z.string().describe('The name of the service.'),
           price: z.number().describe('The price of the service.'),
           numberOfServices: z
             .number()
@@ -173,7 +256,11 @@ Besides that, you can also chat with users and do some calculations if needed.`
               'The **quantity** for a service to purchase. Can be optional if the user did not specify it.'
             )
         }),
-        render: async function* ({ symbol, price, numberOfServices = 10 }) {
+        render: async function* ({
+          service_name,
+          price,
+          numberOfServices = 10
+        }) {
           if (numberOfServices <= 0 || numberOfServices > 100) {
             aiState.done({
               ...aiState.get(),
@@ -199,7 +286,7 @@ Besides that, you can also chat with users and do some calculations if needed.`
                 role: 'function',
                 name: 'showServicePurchase',
                 content: JSON.stringify({
-                  symbol,
+                  service_name,
                   price,
                   numberOfServices
                 })
@@ -212,7 +299,7 @@ Besides that, you can also chat with users and do some calculations if needed.`
               <Purchase
                 props={{
                   numberOfServices,
-                  symbol,
+                  service_name,
                   price: +price,
                   status: 'requires_action'
                 }}
@@ -249,6 +336,7 @@ export type UIState = {
 
 export const AI = createAI<AIState, UIState>({
   actions: {
+    confirmPurchase,
     submitUserMessage
   },
   initialUIState: [],
@@ -298,6 +386,7 @@ export const AI = createAI<AIState, UIState>({
   }
 })
 
+//  * GetUIStateFromAIState is designed to transform a AI state into a UI state that us suitable for rendering in a React-based user interface
 export const getUIStateFromAIState = (aiState: Chat) => {
   return aiState.messages
     .filter(message => message.role !== 'system')
@@ -305,9 +394,13 @@ export const getUIStateFromAIState = (aiState: Chat) => {
       id: `${aiState.chatId}-${index}`,
       display:
         message.role === 'function' ? (
-          message.name === 'showPriceTable' ? (
+          message.name === 'showFullPriceTable' ? (
             <BotCard>
-              <PriceTable props={JSON.parse(message.content)} />
+              <Services props={JSON.parse(message.content)} />
+            </BotCard>
+          ) : message.name === 'showServicePurchase' ? (
+            <BotCard>
+              <Purchase props={JSON.parse(message.content)} />
             </BotCard>
           ) : null
         ) : message.role === 'user' ? (

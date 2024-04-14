@@ -6,15 +6,18 @@ import { formatNumber } from '@/lib/utils'
 
 import type { AI } from '@/lib/chat/actions'
 
+import { nanoid } from 'nanoid'
+import { UserMessage } from '@/components/stocks/message'
+
 interface Purchase {
   numberOfServices?: number
-  symbol: string
+  service_name: string
   price: number
   status: 'requires_action' | 'completed' | 'expired'
 }
 
 export function Purchase({
-  props: { numberOfServices, symbol, price, status = 'requires_action' }
+  props: { numberOfServices, service_name, price, status = 'requires_action' }
 }: {
   props: Purchase
 }) {
@@ -36,7 +39,7 @@ export function Purchase({
     // Insert a hidden history info to the list.
     const message = {
       role: 'system' as const,
-      content: `[User has changed to purchase ${newValue} shares of ${name}. Total cost: $${(
+      content: `[User has changed to purchase ${newValue} shares of ${service_name}. Total cost: $${(
         newValue * price
       ).toFixed(2)}]`,
 
@@ -59,9 +62,13 @@ export function Purchase({
     setAIState({ ...aiState, messages: [...aiState.messages, message] })
   }
 
+  function submitUserMessage(message: any) {
+    throw new Error('Function not implemented.')
+  }
+
   return (
     <div className="rounded-xl  bg-white p-10">
-      <div className="text-4xl">{symbol}</div>
+      <div className="text-4xl">{service_name}</div>
       <div className="text-lg font-bold">${price}</div>
       {purchasingUI ? (
         <div className="mt-4">{purchasingUI}</div>
@@ -119,28 +126,44 @@ export function Purchase({
 
           <button
             className="mt-6 w-full rounded-lg bg-zinc-300 px-4 py-2 font-bold text-zinc-900 hover:bg-zinc-400"
-            onClick={() =>
-              alert(
-                `You have bought ${value} services, and it cost you $${(value * price).toFixed(2)}!`
-              )
-            }
-            // onClick={async () => {
-            //   const response = await confirmPurchase(symbol, price, value)
-            //   setPurchasingUI(response.purchasingUI)
+            // onClick={() =>
+            //   alert(
+            //     `You have bought ${value} services, and it cost you $${(value * price).toFixed(2)}!`
+            //   )
+            // }
+            onClick={async () => {
+              const response = await confirmPurchase(service_name, price, value)
+              setPurchasingUI(response.purchasingUI)
 
-            //   // Insert a new system message to the UI.
-            //   setMessages((currentMessages: any) => [
-            //     ...currentMessages,
-            //     response.newMessage
-            //   ])
-            // }}
+              // Insert a new system message to the UI.
+              setMessages((currentMessages: any) => [
+                ...currentMessages,
+                response.newMessage
+              ])
+              // setMessages(currentMessages => [
+              //   ...currentMessages,
+              //   {
+              //     id: nanoid(),
+              //     display: <UserMessage>{response.newMessage}</UserMessage>
+              //   }
+              // ])
+
+              // const responseMessage = await submitUserMessage(
+              //   response.newMessage
+              // )
+
+              // setMessages((currentMessages: any) => [
+              //   ...currentMessages,
+              //   responseMessage
+              // ])
+            }}
           >
             Purchase
           </button>
         </>
       ) : status === 'completed' ? (
         <p className="mb-2 text-white">
-          You have successfully purchased {value} ${symbol}. Total cost:{' '}
+          You have successfully purchased {value} ${service_name}. Total cost:{' '}
           {formatNumber(value * price)}
         </p>
       ) : status === 'expired' ? (
